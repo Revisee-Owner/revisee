@@ -109,7 +109,7 @@ export default function AIToolsPage() {
         {AI_TOOLS.map((tool) => (
           <button
             key={tool.id}
-            onClick={() => setActiveTool(tool.id)} style={{ cursor: "pointer" }}
+            onClick={() => setActiveTool(tool.id)} style={{ cursor: "pointer", transition: "transform 0.15s ease, box-shadow 0.15s ease" }} onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.08)"; }} onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
             className={cn(
               "card px-4 py-4 text-left transition-all cursor-pointer",
               activeTool === tool.id
