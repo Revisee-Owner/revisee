@@ -1,67 +1,48 @@
-const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 const FREE_TIER_MONTHLY_LIMIT = 5;
 
 type AIAction = "summarize" | "quiz" | "study_guide";
 
 interface AIResult {
   content: string;
-  tokensUsed: number;
 }
 
 const SYSTEM_PROMPTS: Record<AIAction, string> = {
   summarize: `You are a study assistant. Summarize the following notes into clear, concise bullet points that a student can quickly review. Focus on key concepts, definitions, and important relationships. Keep it under 300 words.`,
 
-  quiz: `You are a study assistant. Generate 5 multiple-choice quiz questions based on the following notes. For each question, provide 4 options (A-D) and indicate the correct answer. Format as JSON array:
-[{"question": "...", "options": ["A) ...", "B) ...", "C) ...", "D) ..."], "correct": "A", "explanation": "..."}]
-Return ONLY the JSON array, no other text.`,
+  quiz: `You are a study assistant. Generate 5 multiple-choice quiz questions based on the following notes. For each question, provide 4 options (A-D) and indicate the correct answer with a brief explanation. Format clearly.`,
 
-  study_guide: `You are a study assistant. Create a structured study guide from the following notes. Include:
-1. Key Topics (with brief explanations)
-2. Important Terms & Definitions
-3. Connections Between Concepts
-4. Suggested Review Questions
-Keep it organized and scannable. Use markdown formatting.`,
+  study_guide: `You are a study assistant. Create a structured study guide from the following notes. Include: 1. Key Topics with brief explanations, 2. Important Terms and Definitions, 3. Connections Between Concepts, 4. Suggested Review Questions. Keep it organized and scannable.`,
 };
 
 export async function generateAI(
   action: AIAction,
   noteContent: string
 ): Promise<AIResult> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("ANTHROPIC_API_KEY not configured");
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY not configured");
 
-  const response = await fetch(ANTHROPIC_API_URL, {
+  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 1500,
-      system: SYSTEM_PROMPTS[action],
-      messages: [
-        {
-          role: "user",
-          content: `Here are my notes:\n\n${noteContent.slice(0, 4000)}`,
-        },
-      ],
+      contents: [{
+        parts: [{
+          text: `${SYSTEM_PROMPTS[action]}\n\nHere are my notes:\n\n${noteContent.slice(0, 4000)}`
+        }]
+      }]
     }),
   });
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`AI API error: ${response.status} - ${err}`);
+    throw new Error(`Gemini API error: ${response.status} - ${err}`);
   }
 
   const data = await response.json();
-  const text = data.content?.[0]?.text || "";
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-  return {
-    content: text,
-    tokensUsed: (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0),
-  };
+  return { content: text };
 }
 
 export function canUseAI(plan: string, creditsUsed: number): boolean {
