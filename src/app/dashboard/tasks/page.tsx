@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Filter, SlidersHorizontal } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import TaskCard from "@/components/tasks/TaskCard";
@@ -9,86 +9,97 @@ import TaskForm from "@/components/tasks/TaskForm";
 import EmptyState from "@/components/ui/EmptyState";
 import { cn } from "@/lib/utils";
 
-const DEMO_COURSES = [
-  { id: "c1", name: "Chemistry", color: "#fa5252", emoji: "🧪" },
-  { id: "c2", name: "CS 201", color: "#5c7cfa", emoji: "💻" },
-  { id: "c3", name: "Calculus II", color: "#40c057", emoji: "📐" },
-  { id: "c4", name: "Business 101", color: "#fd7e14", emoji: "📊" },
-];
-
-const INITIAL_TASKS = [
-  {
-    id: "1", title: "Finish Lab Report — Chemistry", description: "Due: Section 3-5 analysis",
-    priority: "HIGH" as const, status: "PENDING" as const,
-    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 4).toISOString(),
-    course: DEMO_COURSES[0],
-  },
-  {
-    id: "2", title: "Read Chapter 7 — Data Structures", description: null,
-    priority: "MEDIUM" as const, status: "IN_PROGRESS" as const,
-    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
-    course: DEMO_COURSES[1],
-  },
-  {
-    id: "3", title: "Calculus problem set #4", description: "Problems 1-20, odd only",
-    priority: "MEDIUM" as const, status: "PENDING" as const,
-    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 48).toISOString(),
-    course: DEMO_COURSES[2],
-  },
-  {
-    id: "4", title: "Group presentation slides", description: "My section: market analysis",
-    priority: "LOW" as const, status: "PENDING" as const,
-    dueDate: new Date(Date.now() + 1000 * 60 * 60 * 120).toISOString(),
-    course: DEMO_COURSES[3],
-  },
-  {
-    id: "5", title: "Review midterm flashcards", description: null,
-    priority: "HIGH" as const, status: "DONE" as const,
-    dueDate: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    course: DEMO_COURSES[1],
-  },
-];
-
 type FilterStatus = "ALL" | "PENDING" | "IN_PROGRESS" | "DONE";
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<(typeof INITIAL_TASKS)[0] | null>(null);
+  const [editingTask, setEditingTask] = useState<any | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("ALL");
+
+  // Fetch tasks and courses from API
+  useEffect(() => {
+    async function load() {
+      try {
+        const [tasksRes, coursesRes] = await Promise.all([
+          fetch("/api/tasks"),
+          fetch("/api/courses"),
+        ]);
+        if (tasksRes.ok) setTasks(await tasksRes.json());
+        if (coursesRes.ok) setCourses(await coursesRes.json());
+      } catch (error) {
+        console.error("Failed to load data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
 
   const filteredTasks =
     filterStatus === "ALL"
       ? tasks
       : tasks.filter((t) => t.status === filterStatus);
 
-  const handleAdd = (data: any) => {
-    const newTask = {
-      ...data,
-      id: crypto.randomUUID(),
-      course: DEMO_COURSES.find((c) => c.id === data.courseId) || null,
-    };
-    setTasks([newTask, ...tasks]);
-    setModalOpen(false);
+  const handleAdd = async (data: any) => {
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const newTask = await res.json();
+        setTasks([newTask, ...tasks]);
+        setModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Failed to create task:", error);
+    }
   };
 
-  const handleEdit = (data: any) => {
-    setTasks(
-      tasks.map((t) =>
-        t.id === editingTask?.id
-          ? { ...t, ...data, course: DEMO_COURSES.find((c) => c.id === data.courseId) || null }
-          : t
-      )
-    );
-    setEditingTask(null);
+  const handleEdit = async (data: any) => {
+    if (!editingTask) return;
+    try {
+      const res = await fetch(`/api/tasks/${editingTask.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setTasks(tasks.map((t) => (t.id === editingTask.id ? updated : t)));
+        setEditingTask(null);
+      }
+    } catch (error) {
+      console.error("Failed to update task:", error);
+    }
   };
 
-  const handleStatusChange = (id: string, status: string) => {
-    setTasks(tasks.map((t) => (t.id === id ? { ...t, status: status as any } : t)));
+  const handleStatusChange = async (id: string, status: string) => {
+    // Update UI immediately
+    setTasks(tasks.map((t) => (t.id === id ? { ...t, status } : t)));
+    try {
+      await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+    } catch (error) {
+      console.error("Failed to update status:", error);
+    }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
+    // Update UI immediately
     setTasks(tasks.filter((t) => t.id !== id));
+    try {
+      await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+    }
   };
 
   const statusFilters: { label: string; value: FilterStatus }[] = [
@@ -97,6 +108,16 @@ export default function TasksPage() {
     { label: "In Progress", value: "IN_PROGRESS" },
     { label: "Done", value: "DONE" },
   ];
+
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto animate-in">
+        <div className="flex items-center justify-center py-20">
+          <p className="text-ink-3">Loading tasks...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto animate-in">
@@ -171,7 +192,7 @@ export default function TasksPage() {
       {/* Add modal */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="New Task">
         <TaskForm
-          courses={DEMO_COURSES}
+          courses={courses}
           onSubmit={handleAdd}
           onCancel={() => setModalOpen(false)}
         />
@@ -193,9 +214,9 @@ export default function TasksPage() {
               dueDate: editingTask.dueDate
                 ? new Date(editingTask.dueDate).toISOString().slice(0, 16)
                 : "",
-              courseId: editingTask.course?.id || "",
+              courseId: editingTask.course?.id || editingTask.courseId || "",
             } as any}
-            courses={DEMO_COURSES}
+            courses={courses}
             onSubmit={handleEdit}
             onCancel={() => setEditingTask(null)}
             submitLabel="Save Changes"

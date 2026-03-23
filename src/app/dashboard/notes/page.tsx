@@ -1,48 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Search } from "lucide-react";
 import Button from "@/components/ui/Button";
 import NoteCard from "@/components/notes/NoteCard";
 import EmptyState from "@/components/ui/EmptyState";
 import Modal from "@/components/ui/Modal";
 
-const DEMO_NOTES = [
-  {
-    id: "n1",
-    title: "Data Structures — Binary Trees",
-    content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Binary trees are hierarchical data structures where each node has at most two children. Key operations include insertion, deletion, and traversal (in-order, pre-order, post-order)." }] }] },
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-    course: { name: "CS 201", color: "#5c7cfa", emoji: "💻" },
-  },
-  {
-    id: "n2",
-    title: "Organic Chemistry — Reaction Mechanisms",
-    content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "SN1 and SN2 reactions differ in their mechanisms. SN1 is a two-step process involving carbocation intermediate, while SN2 is a one-step concerted mechanism with backside attack." }] }] },
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    course: { name: "Chemistry", color: "#fa5252", emoji: "🧪" },
-  },
-  {
-    id: "n3",
-    title: "Integration by Parts — Examples",
-    content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Formula: ∫u dv = uv - ∫v du. Choose u using LIATE rule: Logarithmic, Inverse trig, Algebraic, Trigonometric, Exponential." }] }] },
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
-    course: { name: "Calculus II", color: "#40c057", emoji: "📐" },
-  },
-  {
-    id: "n4",
-    title: "Marketing Mix — 4Ps Framework",
-    content: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Product, Price, Place, Promotion. Each element must be carefully considered and balanced to create a successful marketing strategy." }] }] },
-    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString(),
-    course: { name: "Business 101", color: "#fd7e14", emoji: "📊" },
-  },
-];
-
 export default function NotesPage() {
-  const [notes, setNotes] = useState(DEMO_NOTES);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [showNewNote, setShowNewNote] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/notes");
+        if (res.ok) setNotes(await res.json());
+      } catch (error) {
+        console.error("Failed to load notes:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
 
   const filtered = notes.filter(
     (n) =>
@@ -50,20 +34,34 @@ export default function NotesPage() {
       (n.course?.name || "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleCreateNote = () => {
+  const handleCreateNote = async () => {
     if (!newTitle.trim()) return;
-    const newNote = {
-      id: crypto.randomUUID(),
-      title: newTitle,
-      content: { type: "doc", content: [] },
-      updatedAt: new Date().toISOString(),
-      course: null as any,
-    };
-    setNotes([newNote, ...notes]);
-    setNewTitle("");
-    setShowNewNote(false);
-    // In real app, navigate to /notes/[id] to edit
+    try {
+      const res = await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle }),
+      });
+      if (res.ok) {
+        const newNote = await res.json();
+        setNotes([newNote, ...notes]);
+        setNewTitle("");
+        setShowNewNote(false);
+      }
+    } catch (error) {
+      console.error("Failed to create note:", error);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto animate-in">
+        <div className="flex items-center justify-center py-20">
+          <p className="text-ink-3">Loading notes...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto animate-in">
