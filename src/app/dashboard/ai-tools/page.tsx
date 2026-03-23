@@ -109,7 +109,7 @@ export default function AIToolsPage() {
         {AI_TOOLS.map((tool) => (
           <button
             key={tool.id}
-            onClick={() => setActiveTool(tool.id)}
+            onClick={() => setActiveTool(tool.id)} style={{ cursor: "pointer" }}
             className={cn(
               "card px-4 py-4 text-left transition-all cursor-pointer",
               activeTool === tool.id
