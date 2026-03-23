@@ -1,94 +1,118 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Save, Sparkles, BookOpen } from "lucide-react";
+import { useState, useEffect, use } from "react";
+import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 
-export default function NoteEditorPage() {
-  const [title, setTitle] = useState("Data Structures — Binary Trees");
-  const [content, setContent] = useState(
-    "Binary trees are hierarchical data structures where each node has at most two children.\n\nKey operations include insertion, deletion, and traversal (in-order, pre-order, post-order).\n\n## Types of Binary Trees\n\n- Full Binary Tree: Every node has 0 or 2 children\n- Complete Binary Tree: All levels filled except possibly the last\n- Perfect Binary Tree: All internal nodes have 2 children, all leaves at same level\n- Balanced Binary Tree: Height difference between subtrees is at most 1"
-  );
-  const [saved, setSaved] = useState(true);
+export default function NoteEditorPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleContentChange = (val: string) => {
-    setContent(val);
-    setSaved(false);
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch(`/api/notes/${id}`);
+        if (res.ok) {
+          const note = await res.json();
+          setTitle(note.title);
+          // Extract text from JSON content
+          if (typeof note.content === "string") {
+            setContent(note.content);
+          } else if (note.content?.content) {
+            const text = note.content.content
+              .map((block: any) =>
+                block.content?.map((c: any) => c.text).join("") || ""
+              )
+              .join("\n\n");
+            setContent(text);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load note:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [id]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/notes/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          content: {
+            type: "doc",
+            content: content.split("\n\n").filter(Boolean).map((paragraph) => ({
+              type: "paragraph",
+              content: [{ type: "text", text: paragraph }],
+            })),
+          },
+        }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } catch (error) {
+      console.error("Failed to save note:", error);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSave = () => {
-    // API call to save
-    setSaved(true);
-  };
+  if (loading) {
+    return (
+      <div className="max-w-3xl mx-auto animate-in">
+        <div className="flex items-center justify-center py-20">
+          <p className="text-ink-3">Loading note...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto animate-in">
       {/* Top bar */}
       <div className="flex items-center justify-between mb-6">
         <Link
-          href="/notes"
+          href="/dashboard/notes"
           className="flex items-center gap-2 text-sm text-ink-3 hover:text-ink-0 transition-colors"
         >
           <ArrowLeft size={16} /> Back to Notes
         </Link>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-ink-4">
-            {saved ? "Saved" : "Unsaved changes"}
+        <Button onClick={handleSave} disabled={saving}>
+          <span className="flex items-center gap-2">
+            <Save size={16} />
+            {saving ? "Saving..." : saved ? "Saved ✓" : "Save"}
           </span>
-          <Button size="sm" onClick={handleSave} disabled={saved}>
-            <span className="flex items-center gap-1.5">
-              <Save size={14} /> Save
-            </span>
-          </Button>
-        </div>
-      </div>
-
-      {/* Course badge */}
-      <div className="mb-4">
-        <span className="badge text-xs" style={{ backgroundColor: "#5c7cfa15", color: "#5c7cfa", borderColor: "#5c7cfa30" }}>
-          💻 CS 201
-        </span>
+        </Button>
       </div>
 
       {/* Title */}
       <input
         type="text"
-        className="w-full text-2xl font-display font-bold text-ink-0 bg-transparent border-none outline-none placeholder:text-ink-4 mb-4"
         value={title}
-        onChange={(e) => { setTitle(e.target.value); setSaved(false); }}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full text-2xl font-display font-bold text-ink-0 bg-transparent border-none outline-none mb-4 placeholder:text-ink-4"
         placeholder="Note title..."
       />
 
-      {/* Editor (simplified textarea — swap for TipTap in production) */}
-      <div className="card p-6 min-h-[400px]">
-        <textarea
-          className="w-full min-h-[360px] bg-transparent border-none outline-none resize-none text-sm text-ink-1 leading-relaxed font-sans placeholder:text-ink-4"
-          value={content}
-          onChange={(e) => handleContentChange(e.target.value)}
-          placeholder="Start writing your notes..."
-        />
-      </div>
-
-      {/* AI Actions bar */}
-      <div className="mt-4 card px-4 py-3 flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-ink-3 font-medium mr-2">AI Tools:</span>
-        <Button size="sm" variant="secondary">
-          <span className="flex items-center gap-1.5">
-            <Sparkles size={13} /> Summarize
-          </span>
-        </Button>
-        <Button size="sm" variant="secondary">
-          <span className="flex items-center gap-1.5">
-            <BookOpen size={13} /> Generate Quiz
-          </span>
-        </Button>
-        <Button size="sm" variant="secondary">
-          <span className="flex items-center gap-1.5">
-            <BookOpen size={13} /> Study Guide
-          </span>
-        </Button>
-      </div>
+      {/* Editor */}
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        className="w-full min-h-[60vh] bg-surface-2 rounded-xl p-5 text-ink-1 text-base leading-relaxed border border-surface-3 outline-none focus:border-brand-600 transition-colors resize-none placeholder:text-ink-4"
+        placeholder="Start writing your notes here..."
+      />
     </div>
   );
 }

@@ -18,7 +18,7 @@ export default function NoteCard({ note }: NoteCardProps) {
   const preview = truncate(extractTextFromTipTap(note.content), 120);
 
   return (
-    <Link href={`/notes/${note.id}`}>
+    <Link href={`/dashboard/notes/${note.id}`}>
       <div className="card p-5 h-full flex flex-col gap-3 hover:border-brand-200 transition-colors cursor-pointer">
         {/* Course badge */}
         {note.course && (
