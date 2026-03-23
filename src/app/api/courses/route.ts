@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await getCurrentUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = (session.user as any).id;
   const courses = await db.course.findMany({
     where: { userId },
     include: {
-      _count: { select: { tasks: true, notes: true } },
+      _count: {
+        select: { tasks: true, notes: true },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -20,18 +20,20 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const userId = await getCurrentUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = (session.user as any).id;
   const body = await req.json();
+  const { name, color, emoji } = body;
+
+  if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
 
   const course = await db.course.create({
     data: {
       userId,
-      name: body.name,
-      color: body.color || "#5c7cfa",
-      emoji: body.emoji || "📚",
+      name,
+      color: color || "#5c7cfa",
+      emoji: emoji || "📚",
     },
   });
 

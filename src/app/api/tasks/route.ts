@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCurrentUserId } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await getCurrentUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = (session.user as any).id;
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status");
   const courseId = searchParams.get("courseId");
@@ -28,24 +24,23 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await getCurrentUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = (session.user as any).id;
   const body = await req.json();
+  const { title, description, priority, status, dueDate, courseId } = body;
+
+  if (!title) return NextResponse.json({ error: "Title is required" }, { status: 400 });
 
   const task = await db.task.create({
     data: {
       userId,
-      title: body.title,
-      description: body.description || null,
-      priority: body.priority || "MEDIUM",
-      status: body.status || "PENDING",
-      dueDate: body.dueDate ? new Date(body.dueDate) : null,
-      reminderAt: body.reminderAt ? new Date(body.reminderAt) : null,
-      courseId: body.courseId || null,
+      title,
+      description: description || null,
+      priority: priority || "MEDIUM",
+      status: status || "PENDING",
+      dueDate: dueDate ? new Date(dueDate) : null,
+      courseId: courseId || null,
     },
     include: { course: true },
   });
