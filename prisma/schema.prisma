@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum Plan {
@@ -32,8 +33,9 @@ enum AIGenerationType {
 model User {
   id            String   @id @default(uuid())
   email         String   @unique
-  passwordHash  String   @map("password_hash")
+  passwordHash  String?  @map("password_hash")
   name          String
+  image         String?
   plan          Plan     @default(FREE)
   aiCreditsUsed Int      @default(0) @map("ai_credits_used")
   stripeCustomerId String? @map("stripe_customer_id")
