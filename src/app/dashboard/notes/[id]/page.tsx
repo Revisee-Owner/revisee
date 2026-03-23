@@ -20,7 +20,6 @@ export default function NoteEditorPage({ params }: { params: Promise<{ id: strin
         if (res.ok) {
           const note = await res.json();
           setTitle(note.title);
-          // Extract text from JSON content
           if (typeof note.content === "string") {
             setContent(note.content);
           } else if (note.content?.content) {
@@ -81,7 +80,6 @@ export default function NoteEditorPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="max-w-3xl mx-auto animate-in">
-      {/* Top bar */}
       <div className="flex items-center justify-between mb-6">
         <Link
           href="/dashboard/notes"
@@ -97,7 +95,6 @@ export default function NoteEditorPage({ params }: { params: Promise<{ id: strin
         </Button>
       </div>
 
-      {/* Title */}
       <input
         type="text"
         value={title}
@@ -106,7 +103,6 @@ export default function NoteEditorPage({ params }: { params: Promise<{ id: strin
         placeholder="Note title..."
       />
 
-      {/* Editor */}
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
