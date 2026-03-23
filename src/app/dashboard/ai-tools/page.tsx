@@ -111,7 +111,7 @@ export default function AIToolsPage() {
             key={tool.id}
             onClick={() => setActiveTool(tool.id)}
             className={cn(
-              "card px-4 py-4 text-left transition-all",
+              "card px-4 py-4 text-left transition-all cursor-pointer",
               activeTool === tool.id
                 ? "border-brand-400 shadow-glow"
                 : "hover:border-surface-4"
