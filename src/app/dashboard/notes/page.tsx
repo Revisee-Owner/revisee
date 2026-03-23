@@ -57,7 +57,7 @@ export default function NotesPage() {
       title: newTitle,
       content: { type: "doc", content: [] },
       updatedAt: new Date().toISOString(),
-      course: null,
+      course: null as any,
     };
     setNotes([newNote, ...notes]);
     setNewTitle("");
