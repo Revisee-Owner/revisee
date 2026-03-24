@@ -16,10 +16,10 @@ import {
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/tasks", icon: CheckSquare, label: "Tasks" },
-  { href: "/notes", icon: FileText, label: "Notes" },
-  { href: "/courses", icon: BookOpen, label: "Courses" },
-  { href: "/ai-tools", icon: Sparkles, label: "AI Tools" },
+  { href: "/dashboard/tasks", icon: CheckSquare, label: "Tasks" },
+  { href: "/dashboard/notes", icon: FileText, label: "Notes" },
+  { href: "/dashboard/courses", icon: BookOpen, label: "Courses" },
+  { href: "/dashboard/ai-tools", icon: Sparkles, label: "AI Tools" },
 ];
 
 interface TopbarProps {
