@@ -27,7 +27,7 @@ export default function Sidebar({ plan = "FREE" }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 h-screen sticky top-0" style={{ background: "#fff", borderRight: "1px solid #e9ecef" }}>
+    <aside className="hidden lg:flex flex-col w-64 h-screen sticky top-0" style={{ background: "var(--color-surface-0)", borderRight: "1px solid var(--color-surface-3)" }}>
       {/* Logo */}
       <div style={{ padding: "18px 24px", borderBottom: "1px solid #f1f3f5" }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>

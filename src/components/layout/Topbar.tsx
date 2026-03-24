@@ -41,9 +41,9 @@ export default function Topbar() {
         position: "sticky", top: 0, zIndex: 40, height: 56,
         display: "flex", alignItems: "center",
         padding: "0 16px",
-        background: "rgba(255,255,255,0.8)",
+        background: "var(--color-surface-0)",
         backdropFilter: "blur(12px)",
-        borderBottom: "1px solid #e9ecef",
+        borderBottom: "1px solid var(--color-surface-3)",
       }}>
         <button
           onClick={() => setMobileOpen(true)}
@@ -65,6 +65,7 @@ export default function Topbar() {
           <button style={{ padding: 8, borderRadius: 8, background: "none", border: "none", color: "#868e96", cursor: "pointer" }}>
             <Search size={18} />
           </button>
+          <ThemeToggle />
           {userImage ? (
             <img
               src={userImage}
