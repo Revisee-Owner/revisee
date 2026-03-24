@@ -14,6 +14,7 @@ import {
   Sparkles,
   Search,
 } from "lucide-react";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 const navItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },

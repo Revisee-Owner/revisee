@@ -29,6 +29,31 @@
   --font-mono: "JetBrains Mono", monospace;
 }
 
+html.dark {
+  --color-brand-50: #1a2332;
+  --color-brand-100: #1e2d42;
+  --color-brand-200: #264060;
+  --color-brand-400: #5a7ec7;
+  --color-brand-500: #6b8fd8;
+  --color-brand-600: #7ca0e8;
+  --color-brand-700: #8db1f8;
+  --color-brand-800: #a0c0ff;
+  --color-surface-0: #1a1b1e;
+  --color-surface-1: #141517;
+  --color-surface-2: #25262b;
+  --color-surface-3: #2c2e33;
+  --color-surface-4: #373a40;
+  --color-ink-0: #e9ecef;
+  --color-ink-1: #dee2e6;
+  --color-ink-2: #ced4da;
+  --color-ink-3: #868e96;
+  --color-ink-4: #5c636a;
+  --color-accent-green: #51cf66;
+  --color-accent-red: #ff6b6b;
+  --color-accent-orange: #ffa94d;
+  --color-accent-yellow: #ffd43b;
+}
+
 body {
   background-color: var(--color-surface-1);
   color: var(--color-ink-0);
@@ -39,6 +64,7 @@ body {
 ::selection {
   background-color: var(--color-brand-200);
 }
+
 .btn-primary {
   display: inline-flex;
   align-items: center;
