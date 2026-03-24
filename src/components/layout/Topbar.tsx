@@ -53,7 +53,7 @@ export default function Topbar() {
           <Menu size={20} />
         </button>
 
-        <h2 className="hidden lg:block" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, fontSize: 17, color: "#212529", paddingLeft: 16 }}>
+        <h2 className="hidden lg:block" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, fontSize: 17, color: "var(--color-ink-0)", paddingLeft: 16 }}>
           {pageTitle}
         </h2>
 

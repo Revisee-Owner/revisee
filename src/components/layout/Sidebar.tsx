@@ -29,7 +29,7 @@ export default function Sidebar({ plan = "FREE" }: SidebarProps) {
   return (
     <aside className="hidden lg:flex flex-col w-64 h-screen sticky top-0" style={{ background: "var(--color-surface-0)", borderRight: "1px solid var(--color-surface-3)" }}>
       {/* Logo */}
-      <div style={{ padding: "18px 24px", borderBottom: "1px solid #f1f3f5" }}>
+      <div style={{ padding: "18px 24px", borderBottom: "1px solid var(--color-surface-3)" }}>
         <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <div style={{
             width: 34, height: 34, borderRadius: 10,
@@ -39,10 +39,10 @@ export default function Sidebar({ plan = "FREE" }: SidebarProps) {
             boxShadow: "0 2px 8px rgba(59,130,246,0.3)",
           }}>R</div>
           <div>
-            <h1 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700, fontSize: 16, color: "#212529", lineHeight: 1.2 }}>
+            <h1 style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700, fontSize: 16, color: "var(--color-ink-0)", lineHeight: 1.2 }}>
               Revisee
             </h1>
-            <p style={{ fontSize: 11, color: "#adb5bd", fontWeight: 500 }}>Study smarter</p>
+            <p style={{ fontSize: 11, color: "var(--color-ink-4)", fontWeight: 500 }}>Study smarter</p>
           </div>
         </Link>
       </div>
@@ -65,7 +65,7 @@ export default function Sidebar({ plan = "FREE" }: SidebarProps) {
                 fontSize: 14, fontWeight: 500, textDecoration: "none",
                 transition: "all 0.15s",
                 background: isActive ? "rgba(59,130,246,0.08)" : "transparent",
-                color: isActive ? "#3b82f6" : "#495057",
+                color: isActive ? "#3b82f6" : "var(--color-ink-2)",
               }}
             >
               <item.icon size={18} />
@@ -79,7 +79,7 @@ export default function Sidebar({ plan = "FREE" }: SidebarProps) {
       </nav>
 
       {/* Plan badge */}
-      <div style={{ padding: "14px 12px", borderTop: "1px solid #f1f3f5" }}>
+      <div style={{ padding: "14px 12px", borderTop: "1px solid var(--color-surface-3)" }}>
         {plan === "FREE" ? (
           <div style={{
             display: "flex", alignItems: "center", gap: 10,
