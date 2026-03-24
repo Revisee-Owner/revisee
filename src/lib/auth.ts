@@ -11,10 +11,8 @@ export const authOptions: AuthOptions = {
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user }) {
       if (!user.email) return false;
-      
-      // Create or update user in database
       try {
         await db.user.upsert({
           where: { email: user.email },
@@ -33,11 +31,11 @@ export const authOptions: AuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user }) {
-      if (user?.email) {
+    async jwt({ token }) {
+      if (token.email) {
         try {
           const dbUser = await db.user.findUnique({
-            where: { email: user.email },
+            where: { email: token.email },
           });
           if (dbUser) {
             token.id = dbUser.id;
