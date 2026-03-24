@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   Menu,
   X,
@@ -22,13 +23,12 @@ const navItems = [
   { href: "/dashboard/ai-tools", icon: Sparkles, label: "AI Tools" },
 ];
 
-interface TopbarProps {
-  userName?: string;
-}
-
-export default function Topbar({ userName = "Student" }: TopbarProps) {
+export default function Topbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const userName = session?.user?.name || "Student";
+  const userImage = session?.user?.image;
 
   const pageTitle = navItems.find((item) =>
     item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href)
@@ -44,7 +44,6 @@ export default function Topbar({ userName = "Student" }: TopbarProps) {
         backdropFilter: "blur(12px)",
         borderBottom: "1px solid #e9ecef",
       }}>
-        {/* Mobile menu button */}
         <button
           onClick={() => setMobileOpen(true)}
           className="lg:hidden"
@@ -53,33 +52,38 @@ export default function Topbar({ userName = "Student" }: TopbarProps) {
           <Menu size={20} />
         </button>
 
-        {/* Page title - desktop */}
         <h2 className="hidden lg:block" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, fontSize: 17, color: "#212529", paddingLeft: 16 }}>
           {pageTitle}
         </h2>
 
-        {/* Mobile logo */}
         <div className="lg:hidden" style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700, color: "#3b82f6", fontSize: 17 }}>
           Revisee
         </div>
 
-        {/* Right side */}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
           <button style={{ padding: 8, borderRadius: 8, background: "none", border: "none", color: "#868e96", cursor: "pointer" }}>
             <Search size={18} />
           </button>
-          <div style={{
-            width: 32, height: 32, borderRadius: "50%",
-            background: "rgba(59,130,246,0.1)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#3b82f6", fontWeight: 600, fontSize: 13,
-          }}>
-            {userName.charAt(0).toUpperCase()}
-          </div>
+          {userImage ? (
+            <img
+              src={userImage}
+              alt={userName}
+              style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }}
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div style={{
+              width: 32, height: 32, borderRadius: "50%",
+              background: "rgba(59,130,246,0.1)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "#3b82f6", fontWeight: 600, fontSize: 13,
+            }}>
+              {userName.charAt(0).toUpperCase()}
+            </div>
+          )}
         </div>
       </header>
 
-      {/* Mobile drawer */}
       {mobileOpen && (
         <div style={{ position: "fixed", inset: 0, zIndex: 50 }} className="lg:hidden">
           <div
